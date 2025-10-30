@@ -15,7 +15,7 @@ pipeline{
         }
         stage('Checkout from Git'){
             steps{
-                git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/Aseemakram19/starbucks-kubernetes.git'
+                git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/sandeepsai530/starbucks-kubernetes.git'        
             }
         }
         stage("Sonarqube Analysis "){
@@ -47,50 +47,23 @@ pipeline{
             steps{
                 script{
                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker build -t starbucks ."
-                       sh "docker tag starbucks aseemakram19/starbucks:latest "
-                       sh "docker push aseemakram19/starbucks:latest "
+                       sh "docker build -t starbucks1 ."
+                       sh "docker tag starbucks1 sandeep530/starbucks1:latest "
+                       sh "docker push sandeep530/starbucks1:latest "
                     }
                 }
             }
         }
         stage("TRIVY"){
             steps{
-                sh "trivy image aseemakram19/starbucks:latest > trivyimage.txt" 
+                sh "trivy image sandeep530/starbucks:latest > trivyimage.txt" 
             }
         }
         stage('App Deploy to Docker container'){
             steps{
-                sh 'docker run -d --name starbucks -p 3000:3000 aseemakram19/starbucks:latest'
+                sh 'docker run -d --name starbucks -p 3000:3000 sandeep530/starbucks1:latest'
             }
         }
 
     }
-    post {
-    always {
-        script {
-            def buildStatus = currentBuild.currentResult
-            def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'Github User'
-            
-            emailext (
-                subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                    <p>This is a Jenkins starbucks CICD pipeline status.</p>
-                    <p>Project: ${env.JOB_NAME}</p>
-                    <p>Build Number: ${env.BUILD_NUMBER}</p>
-                    <p>Build Status: ${buildStatus}</p>
-                    <p>Started by: ${buildUser}</p>
-                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                """,
-                to: 'mohdaseemakram19@gmail.com',
-                from: 'mohdaseemakram19@gmail.com',
-                replyTo: 'mohdaseemakram19@gmail.com',
-                mimeType: 'text/html',
-                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
-            )
-           }
-       }
-
-    }
-
 }
